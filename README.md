@@ -36,8 +36,11 @@ Making a plugin? You can use Command Panels as a library to make your own GUIs f
 
 **Cloudnet support** allow you to use it with Cloudnet.
 
+
 ##Should I use this version ?
+
 If you don't know what Cloudnet or a cloud system is, you don't have to care about this version and you can download the original plugin
+
 
 ##Custom manual
 
@@ -52,5 +55,8 @@ You can add some options behind:
 - RANDOM: Will connect you on a random server
 
 By default it chooses the first server
+
+
 ### Spigot Page
+
 You can find the spigot page for the plugin [here](https://www.spigotmc.org/resources/67788/).
