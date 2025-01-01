@@ -60,3 +60,7 @@ By default it chooses the first server
 ### Spigot Page
 
 You can find the spigot page for the plugin [here](https://www.spigotmc.org/resources/67788/).
+
+## Support
+If you have any question about how to use the Cloudsystem thing you can join our [Discord server](https://discord.gg/sAvHjqjbMy)
+We won't provide any support on the plugin but only with cloudnet system
