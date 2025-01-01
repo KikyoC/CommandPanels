@@ -1,5 +1,12 @@
 package me.rockyhawk.commandpanels.commandtags.tags.standard;
 
+import eu.cloudnetservice.driver.inject.InjectionLayer;
+import eu.cloudnetservice.driver.provider.CloudServiceProvider;
+import eu.cloudnetservice.driver.service.ServiceInfoSnapshot;
+import eu.cloudnetservice.modules.bridge.player.CloudPlayer;
+import eu.cloudnetservice.modules.bridge.player.PlayerManager;
+import eu.cloudnetservice.modules.bridge.player.executor.PlayerExecutor;
+import eu.cloudnetservice.wrapper.configuration.WrapperConfiguration;
 import me.rockyhawk.commandpanels.CommandPanels;
 import me.rockyhawk.commandpanels.commandtags.CommandTagEvent;
 import me.rockyhawk.commandpanels.openpanelsmanager.PanelPosition;
@@ -10,6 +17,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import javax.imageio.spi.ServiceRegistry;
 import java.util.Set;
 
 public class ItemTags implements Listener {
@@ -118,6 +126,40 @@ public class ItemTags implements Listener {
             } catch (Exception err){
                 plugin.debug(err,e.p);
             }
+
+            return;
+        }
+
+        if (e.name.equalsIgnoreCase("tasks=")) {
+            e.commandTagUsed();
+            CloudServiceProvider provider = InjectionLayer.ext().instance(CloudServiceProvider.class);
+            WrapperConfiguration configuration = InjectionLayer.ext().instance(WrapperConfiguration.class);
+
+            if (provider == null || configuration == null) {
+                plugin.getLogger().severe("CloudNet is not available. Make sure that cloudnet bridge module is enabled.");
+                plugin.getLogger().severe("Run \"modules install CloudNet-Bridge\" in cloudnet terminal.");
+                return ;
+            }
+            ServiceInfoSnapshot service = provider.serviceByName(e.args[0]);
+            if (service == null) {
+                plugin.getLogger().severe("Service " + e.args[0] + " not found.");
+                return;
+            }
+            ServiceRegistry registry = InjectionLayer.ext().instance(ServiceRegistry.class);
+            if (registry == null) {
+                plugin.getLogger().severe("ServiceRegistry is not available.");
+                return;
+            }
+
+            PlayerManager manger = registry.getServiceProviderByClass(PlayerManager.class);
+
+            CloudPlayer player = manger.onlinePlayer(e.p.getUniqueId());
+            if (player == null)
+                return ;
+
+            PlayerExecutor executor = manger.playerExecutor(player.uniqueId());
+
+            executor.connect(service.name());
 
             return;
         }
