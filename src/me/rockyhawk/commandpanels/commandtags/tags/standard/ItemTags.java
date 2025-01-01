@@ -3,6 +3,7 @@ package me.rockyhawk.commandpanels.commandtags.tags.standard;
 import eu.cloudnetservice.driver.inject.InjectionLayer;
 import eu.cloudnetservice.driver.provider.CloudServiceProvider;
 import eu.cloudnetservice.driver.service.ServiceInfoSnapshot;
+import eu.cloudnetservice.modules.bridge.BridgeDocProperties;
 import eu.cloudnetservice.modules.bridge.player.CloudPlayer;
 import eu.cloudnetservice.modules.bridge.player.PlayerManager;
 import eu.cloudnetservice.modules.bridge.player.executor.PlayerExecutor;
@@ -12,13 +13,14 @@ import me.rockyhawk.commandpanels.commandtags.CommandTagEvent;
 import me.rockyhawk.commandpanels.openpanelsmanager.PanelPosition;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import eu.cloudnetservice.driver.registry.ServiceRegistry;
 
-import javax.imageio.spi.ServiceRegistry;
-import java.util.Set;
+import java.util.*;
 
 public class ItemTags implements Listener {
     CommandPanels plugin;
@@ -140,10 +142,21 @@ public class ItemTags implements Listener {
                 plugin.getLogger().severe("Run \"modules install CloudNet-Bridge\" in cloudnet terminal.");
                 return ;
             }
-            ServiceInfoSnapshot service = provider.serviceByName(e.args[0]);
-            if (service == null) {
+
+            List<ServiceInfoSnapshot> task = new ArrayList<>(provider.servicesByTask(e.args[0]));
+            if (task.isEmpty()) {
                 plugin.getLogger().severe("Service " + e.args[0] + " not found.");
                 return;
+            }
+
+            ServiceInfoSnapshot service = null;
+
+            if (e.args.length == 1)
+                service = provider.serviceByName(task.getFirst().name());
+            else {
+                Optional<ServiceInfoSnapshot> optional = getServiceInfoSnapshot(task, e.args[1], e.p);
+                if (optional.isPresent())
+                    service = optional.get();
             }
             ServiceRegistry registry = InjectionLayer.ext().instance(ServiceRegistry.class);
             if (registry == null) {
@@ -151,17 +164,36 @@ public class ItemTags implements Listener {
                 return;
             }
 
-            PlayerManager manger = registry.getServiceProviderByClass(PlayerManager.class);
+            PlayerManager manager = registry.firstProvider(PlayerManager.class);
 
-            CloudPlayer player = manger.onlinePlayer(e.p.getUniqueId());
+            if (manager == null) {
+                plugin.getLogger().severe("PlayerManager is not available.");
+                return;
+            }
+
+            CloudPlayer player = manager.onlinePlayer(e.p.getUniqueId());
             if (player == null)
                 return ;
 
-            PlayerExecutor executor = manger.playerExecutor(player.uniqueId());
+            PlayerExecutor executor = manager.playerExecutor(player.uniqueId());
 
-            executor.connect(service.name());
-
+            if (service != null)
+                executor.connect(service.name());
             return;
         }
+    }
+
+    public Optional<ServiceInfoSnapshot> getServiceInfoSnapshot(List<ServiceInfoSnapshot> task, String type, Player player) {
+        System.out.println("type: " + type);
+        return switch (type.toUpperCase()) {
+            case "LOWEST_PLAYERS" -> task.stream()
+                    .filter(service -> player.hasPermission(service.readProperty(BridgeDocProperties.REQUIRED_PERMISSION)))
+                    .min(Comparator.comparingInt(service -> service.readProperty(BridgeDocProperties.ONLINE_COUNT)));
+            case "HIGHEST_PLAYERS" -> task.stream()
+                    .filter(service -> player.hasPermission(service.readProperty(BridgeDocProperties.REQUIRED_PERMISSION)))
+                    .max(Comparator.comparingInt(service -> service.readProperty(BridgeDocProperties.ONLINE_COUNT)));
+            case "RANDOM" -> Optional.of(task.get(new Random().nextInt(task.size())));
+            default -> Optional.empty();
+        };
     }
 }
