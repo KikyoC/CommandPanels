@@ -32,17 +32,17 @@ Making a plugin? You can use Command Panels as a library to make your own GUIs f
 
 **Developer API** for easy GUI creation in your own plugins (using this as a dependency) or simply to interact with Command Panels.
 
-##Additional features
+## Additional features
 
 **Cloudnet support** allow you to use it with Cloudnet.
 
 
-##Should I use this version ?
+## Should I use this version ?
 
 If you don't know what Cloudnet or a cloud system is, you don't have to care about this version and you can download the original plugin
 
 
-##Custom manual
+## Custom manual
 
 You can now try to connect your players not to a specific bungeecord server but to a specific cloudnet task.
 Imagine that you have a task called Lobby. You have 2 services running on it with - as separator.
